@@ -41,6 +41,12 @@ var lscache = function() {
   var cachedJSON;
   var cacheBucket = '';
 
+  function quotaExceededError(e) {
+    return e.name === 'QUOTA_EXCEEDED_ERR' ||
+           e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+           e.name === 'QuotaExceededError';
+  }
+
   // Determines if localStorage is supported in the browser;
   // result is cached for better performance instead of being run each time.
   // Feature detection is based on how Modernizr does it;
@@ -59,7 +65,11 @@ var lscache = function() {
       removeItem(key);
       cachedStorage = true;
     } catch (exc) {
-      cachedStorage = false;
+      // Not safe to assume that any exception means that storage is not supported.
+      // Need to handle the case where quota has been exceeded, but storage is obviously still
+      // supported due to existing items in storage.
+      var exceededButSupported = quotaExceededError(exc) && localStorage.length > 0;
+      cachedStorage = exceededButSupported ? true : false;
     }
     return cachedStorage;
   }
@@ -136,7 +146,7 @@ var lscache = function() {
       try {
         setItem(key, value);
       } catch (e) {
-        if (e.name === 'QUOTA_EXCEEDED_ERR' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        if (quotaExceededError(e)) {
           // If we exceeded the quota, then we will sort
           // by the expire time, and then remove the N oldest
           var storedKeys = [];

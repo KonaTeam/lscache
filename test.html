@@ -20,6 +20,43 @@ module('lscache', {
   }
 });
 
+// Utility to build a string of given length
+var getStringOf = function(length) {
+  return (new Array(length)).join('s');
+};
+
+// Hit this browser's localStorage limit using strings of the given length
+var getStorageLimitForLength = function(length) {
+  var value = getStringOf(length),
+      num = 0;
+
+  while(num < 10000) {
+    try {
+      localStorage.setItem('thekey' + num, value);
+      num++;
+    } catch (e) {
+      break;
+    }
+  }
+
+  return num;
+};
+
+var maxOutStorage = function() {
+  // Get close to the limit with long string values quickly...
+  getStorageLimitForLength(10000);
+
+  // ...then hit the limit more precisely with smaller strings. Needs to be within the quota
+  // limit by the length of the string that supportsStorage uses to test for support: (__lscachetest__)
+  getStorageLimitForLength(5);
+};
+
+// This has to be the first test so that a cached supported value is not used
+test('Testing supported() when starting with quota already exceeded', function() {
+  maxOutStorage();
+  equals(lscache.supported(), true);
+});
+
 test('Testing set() and get() with string', function() {
   var key = 'thekey';
   var value = 'thevalue'
@@ -30,8 +67,6 @@ test('Testing set() and get() with string', function() {
     equals(lscache.get(key), null, 'We expect null value');
   }
 });
-
-if (lscache.supported()) {
 
 test('Testing set() with non-string values', function() {
   var key, value;
@@ -86,22 +121,13 @@ test('Testing setBucket()', function() {
 });
 
 test('Testing quota exceeding', function() {
-  var key = 'thekey';
+  var key = 'thekey',
+      stringLength = 10000,
+      longString = getStringOf(stringLength),
+      num = getStorageLimitForLength(stringLength);
 
-  // Figure out this browser's localStorage limit -
-  // Chrome is around 2.6 mil, for example
-  var stringLength = 10000;
-  var longString = (new Array(stringLength+1)).join('s');
-  var num = 0;
-  while(num < 10000) {
-    try {
-      localStorage.setItem(key + num, longString);
-      num++;
-    } catch (e) {
-      break;
-    }
-  }
   localStorage.clear();
+
   // Now add enough to go over the limit
   var approxLimit = num * stringLength;
   var numKeys = Math.ceil(approxLimit/(stringLength+8)) + 1;
@@ -160,8 +186,6 @@ asyncTest('Testing set() and get() with string and expiration in a different buc
     start();
   }, 1000*60*minutes);
 });
-
-}
 
   </script>
  </head>
