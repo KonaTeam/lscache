@@ -32,7 +32,7 @@ var lscache = function() {
   var EXPIRY_RADIX = 10;
 
   // modifier for the time resolution used for expiration, from milliseconds
-  var EXPIRY_UNITS = 60 * 1000;
+  var EXPIRY_UNITS = 1;
 
   // ECMAScript max Date (epoch + 1e8 days)
   var MAX_DATE = Math.floor(8.64e15/EXPIRY_UNITS);

@@ -166,7 +166,7 @@ asyncTest('Testing set() and get() with string and expiration', 1, function() {
   setTimeout(function() {
     equals(lscache.get(key), null, 'We expect value to be null');
     start();
-  }, 1000*60*minutes);
+  }, 1000*60*minutes + 1000); // give timeout some cushion now that ms matter
 });
 
 asyncTest('Testing set() and get() with string and expiration in a different bucket', 2, function() {
@@ -184,7 +184,7 @@ asyncTest('Testing set() and get() with string and expiration in a different buc
     lscache.resetBucket();
     equals(lscache.get(key), value1, 'We expect value to be ' + value1 + ' for the base bucket.');
     start();
-  }, 1000*60*minutes);
+  }, 1000*60*minutes + 1000); // give timeout some cushion now that ms matter
 });
 
   </script>
