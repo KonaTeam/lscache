@@ -31,7 +31,7 @@ var lscache = function() {
   // expiration date radix (set to Base-36 for most space savings)
   var EXPIRY_RADIX = 10;
 
-  // time resolution in minutes
+  // modifier for the time resolution used for expiration, from milliseconds
   var EXPIRY_UNITS = 60 * 1000;
 
   // ECMAScript max Date (epoch + 1e8 days)
@@ -93,11 +93,20 @@ var lscache = function() {
   }
 
   /**
-   * Returns the number of minutes since the epoch.
+   * Returns the amount of time since the epoch in the proper expiry units.
    * @return {number}
    */
   function currentTime() {
     return Math.floor((new Date().getTime())/EXPIRY_UNITS);
+  }
+
+  /**
+   * Converts minutes to expiry units.
+   * @return {number}
+   */
+  function minutesToExpiryUnits(minutes) {
+    // converts to minutes to milliseconds and then applies the expiry units modifier
+    return (minutes * (60 * 1000)) / EXPIRY_UNITS;
   }
 
   /**
@@ -195,7 +204,7 @@ var lscache = function() {
 
       // If a time is specified, store expiration info in localStorage
       if (time) {
-        setItem(expirationKey(key), (currentTime() + time).toString(EXPIRY_RADIX));
+        setItem(expirationKey(key), (currentTime() + minutesToExpiryUnits(time)).toString(EXPIRY_RADIX));
       } else {
         // In case they previously set a time, remove that info from localStorage.
         removeItem(expirationKey(key));
