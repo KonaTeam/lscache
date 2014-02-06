@@ -72,6 +72,7 @@ var lscache = function() {
       var exceededButSupported = quotaExceededError(exc) && localStorage.length > 0;
       cachedStorage = exceededButSupported ? true : false;
     }
+    if (!cachedStorage) { warn("localStorage is not supported with this browser"); }
     return cachedStorage;
   }
 
